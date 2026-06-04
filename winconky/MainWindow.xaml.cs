@@ -24,6 +24,7 @@ namespace winconky
         private DateTime _prevTime = DateTime.UtcNow;
         private CryptoData? _cryptoData;
         private DispatcherTimer _cryptoTimer = new();
+        private ulong _totalRam = 0;
 
         public MainWindow()
         {
@@ -35,6 +36,10 @@ namespace winconky
             _cryptoTimer.Interval = TimeSpan.FromHours(1);
             _cryptoTimer.Tick += async (s, e) => await UpdateCryptoAsync();
             _cryptoTimer.Start();
+
+            var s1 = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem");
+            foreach (ManagementObject obj in s1.Get())
+                _totalRam = (ulong)obj["TotalPhysicalMemory"];
 
             this.Loaded += (s, e) => PositionOnRight();
             StartTimer();
@@ -144,9 +149,9 @@ namespace winconky
                     ulong commitLimit = 0;
                     ulong committedBytes = 0;
 
-                    var searcher = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem");
-                    foreach (ManagementObject obj in searcher.Get())
-                        total = (ulong)obj["TotalPhysicalMemory"];
+                    //var searcher = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem");
+                    //foreach (ManagementObject obj in searcher.Get())
+                    //    total = (ulong)obj["TotalPhysicalMemory"];
 
                     var searcher2 = new ManagementObjectSearcher("SELECT FreePhysicalMemory, TotalVirtualMemorySize, FreeVirtualMemory FROM Win32_OperatingSystem");
                     foreach (ManagementObject obj2 in searcher2.Get())
@@ -156,14 +161,14 @@ namespace winconky
                         committedBytes = commitLimit - (ulong)obj2["FreeVirtualMemory"] * 1024;
                     }
 
-                    ulong used = total - free;
-                    int percentRam = (int)(used * 100 / total);
+                    ulong used = _totalRam - free;
+                    int percentRam = (int)(used * 100 / _totalRam);
                     int percentCommit = (int)(committedBytes * 100 / commitLimit);
 
-                    return (used, total, percentRam, committedBytes, commitLimit, percentCommit);
+                    return (used, _totalRam, percentRam, committedBytes, commitLimit, percentCommit);
                 });
 
-                RamText.Text = $"RAM Physical:\t {ram.used / 1024 / 1024}MB / {ram.total / 1024 / 1024}MB\n" +
+                RamText.Text = $"RAM Physical:\t {ram.used / 1024 / 1024}MB / {ram._totalRam / 1024 / 1024}MB\n" +
                     $"RAM Commited:\t {ram.committedBytes / 1024 / 1024}MB / {ram.commitLimit / 1024 / 1024}MB";
                 RamBar.Value = ram.percentCommit;
 
@@ -194,11 +199,6 @@ namespace winconky
                     double elapsed = (now - _prevTime).TotalSeconds;
                     int cpuCount = Environment.ProcessorCount;
 
-                    ulong totalRam = 0;
-                    var s1 = new ManagementObjectSearcher("SELECT TotalPhysicalMemory FROM Win32_ComputerSystem");
-                    foreach (ManagementObject obj in s1.Get())
-                        totalRam = (ulong)obj["TotalPhysicalMemory"];
-
                     var result = new List<(string Name, double Cpu, double Mem)>();
 
                     foreach (var p in Process.GetProcesses())
@@ -213,8 +213,8 @@ namespace winconky
 
                             _prevCpuTimes[p.Id] = cpu;
 
-                            double memPercent = totalRam > 0
-                                ? (double)p.WorkingSet64 / totalRam * 100.0
+                            double memPercent = _totalRam > 0
+                                ? (double)p.WorkingSet64 / _totalRam * 100.0
                                 : 0;
 
                             result.Add((p.ProcessName, cpuPercent, memPercent));
