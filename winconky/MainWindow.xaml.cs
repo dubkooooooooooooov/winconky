@@ -18,8 +18,8 @@ namespace winconky
     {
         private Window _hiddenOwner;
 
-        private PerformanceCounter _netSent;
-        private PerformanceCounter _netReceived;
+        //private PerformanceCounter _netSent;
+        //private PerformanceCounter _netReceived;
         private Dictionary<int, TimeSpan> _prevCpuTimes = new();
         private DateTime _prevTime = DateTime.UtcNow;
         private CryptoData? _cryptoData;
@@ -30,7 +30,7 @@ namespace winconky
         {
             InitializeComponent();
             Loaded += MainWindow_Loaded;
-            InitNetworkCounters();
+            //InitNetworkCounters();
 
             _ = UpdateCryptoAsync();
             _cryptoTimer.Interval = TimeSpan.FromHours(1);
@@ -70,39 +70,39 @@ namespace winconky
         const int GWL_EXSTYLE = -20;
         const int WS_EX_TOOLWINDOW = 0x00000080;
 
-        private void InitNetworkCounters()
-        {
-            try
-            {
-                var category = new PerformanceCounterCategory("Network Interface");
-                string[] adapterNames = category.GetInstanceNames();
+        //private void InitNetworkCounters()
+        //{
+        //    try
+        //    {
+        //        var category = new PerformanceCounterCategory("Network Interface");
+        //        string[] adapterNames = category.GetInstanceNames();
 
-                string? adapter = adapterNames.FirstOrDefault(i =>
-                    !i.Contains("Loopback") && !i.Contains("Virtual"));
+        //        string? adapter = adapterNames.FirstOrDefault(i =>
+        //            !i.Contains("Loopback") && !i.Contains("Virtual"));
 
-                adapter ??= adapterNames.FirstOrDefault();
+        //        adapter ??= adapterNames.FirstOrDefault();
 
-                if (adapter != null)
-                {
-                    _netSent = new PerformanceCounter("Network Interface", "Bytes Sent/sec", adapter);
-                    _netReceived = new PerformanceCounter("Network Interface", "Bytes Received/sec", adapter);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Network init error: {ex.Message}");
-            }
-        }
+        //        if (adapter != null)
+        //        {
+        //            _netSent = new PerformanceCounter("Network Interface", "Bytes Sent/sec", adapter);
+        //            _netReceived = new PerformanceCounter("Network Interface", "Bytes Received/sec", adapter);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"Network init error: {ex.Message}");
+        //    }
+        //}
 
-        private string FormatSpeed(float bytesPerSec)
-        {
-            if (bytesPerSec >= 1024 * 1024)
-                return $"{bytesPerSec / 1024 / 1024:0.0} MB/s";
-            else if (bytesPerSec >= 1024)
-                return $"{bytesPerSec / 1024:0.0} KB/s";
-            else
-                return $"{bytesPerSec:0} B/s";
-        }
+        //private string FormatSpeed(float bytesPerSec)
+        //{
+        //    if (bytesPerSec >= 1024 * 1024)
+        //        return $"{bytesPerSec / 1024 / 1024:0.0} MB/s";
+        //    else if (bytesPerSec >= 1024)
+        //        return $"{bytesPerSec / 1024:0.0} KB/s";
+        //    else
+        //        return $"{bytesPerSec:0} B/s";
+        //}
 
         private async Task UpdateCryptoAsync()
         {
@@ -188,9 +188,9 @@ namespace winconky
                 CpuBar.Value = cpu;
 
                 // Net
-                float netUp = _netSent.NextValue();
-                float netDown = _netReceived.NextValue();
-                NetText.Text = $"Net: ↑ {FormatSpeed(netUp)}  ↓ {FormatSpeed(netDown)}";
+                //float netUp = _netSent.NextValue();
+                //float netDown = _netReceived.NextValue();
+                //NetText.Text = $"Net: ↑ {FormatSpeed(netUp)}  ↓ {FormatSpeed(netDown)}";
 
                 // Processes
                 var processes = await Task.Run(() =>
